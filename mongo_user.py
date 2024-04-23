@@ -7,20 +7,25 @@ db = client['MENU']
 counter = db.counters.find_one()
 usuario_id = counter['usuarios_id']
 
-def user_add(nome, email, data, senha):
-  if nome and email and data and senha:
-    user = db.usuarios.find_one({'email':email})
+def user_add(json):
+  if json['nome'] and json['email'] and json['data'] and json['senha']:
+    user = db.usuarios.find_one({'email':json['email']})
     if user == None:
       dic = {
-        'id': usuario_id,
-        'nome': nome,
-        'email': email,
-        'data': data,
-        'senha': senha
+        '_id': usuario_id,
+        'nome': json['nome'],
+        'email': json['email'],
+        'data': json['data'],
+        'senha': json['senha'],
+        'rest_preferidos':[],
+        'comida_preferida':[],
+        'amigos':[],	
+        'localizacao':[], #{'data_hora': '', latitude': 0, 'longitude': 0}
+        'rest_avaliados':[] #{'rest_id': 0, 'nota': 0}
       }
       db.counters.update_one({}, {'$inc':{'usuarios_id':1}})
       db.usuarios.insert_one(dic)
-      return {'resp':'Usuario cadastrado com sucesso!', 'status_code': 201}
+      return {'resp':{'message':'Usuario cadastrado com sucesso!', 'user': dic}, 'status_code': 201}
     return {'resp':'Erro: Usuario já existe!', 'status_code': 400}
   else:
     return {'resp':'Erro: Todos os campos são obrigatorios!', 'status_code': 400}
