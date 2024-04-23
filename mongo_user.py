@@ -1,6 +1,7 @@
 #create user
 import pymongo
 import pprint
+from utils import campos_obrigatorios
 
 client = pymongo.MongoClient('mongodb+srv://henriquebrnetto02:2K4y7AIS4IOddUkC@menu.cyvtolc.mongodb.net/?retryWrites=true&w=majority&appName=MENU')
 
@@ -9,7 +10,7 @@ counter = db.counters.find_one()
 usuario_id = counter['usuarios_id']
 
 def user_add(json):
-  if json['nome'] and json['email'] and json['data'] and json['senha']:
+  if campos_obrigatorios(json, ['nome', 'email', 'data', 'senha']):
     user = db.usuarios.find_one({'email':json['email']})
     if user == None:
       dic = {
