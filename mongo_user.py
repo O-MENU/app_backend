@@ -12,7 +12,7 @@ def user_add(nome, email, data, senha):
     user = db.usuarios.find_one({'email':email})
     if user == None:
       dic = {
-        'id': usuario_id,
+        '_id': usuario_id,
         'nome': nome,
         'email': email,
         'data': data,
