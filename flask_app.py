@@ -1,6 +1,7 @@
 from flask import Flask, request
 import os
 from mongo_user import *
+from mongo_rest import *
 
 app = Flask("MENU")
 
