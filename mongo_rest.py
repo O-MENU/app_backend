@@ -30,3 +30,14 @@ def rest_add(json):
         return {'resp':'Erro: Restaurante já existe!', 'status_code': 400}
     else:
         return {'resp':'Erro: Todos os campos são obrigatorios!', 'status_code': 400}
+
+def rest_find(id=None):
+    if id == None:
+        rests = db.restaurantes.find()
+        return {'resp': 'Restaurantes encontrados com sucesso', 'restaurantes': list(rests), 'status_code': 200}
+    else:
+        rest = db.restaurantes.find_one({'_id': id})
+        if rest == None:
+            return {'resp': f'Erro: O restaurante <{id}> não existe', 'status_code': 404}
+        else:
+            return {'resp': f'Restaurante <{id}> encontrado com sucesso', 'restaurante': rest, 'status_code': 200}
