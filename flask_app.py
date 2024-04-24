@@ -2,7 +2,7 @@ from flask import Flask, request
 import os
 from mongo_user import *
 from mongo_rest import *
-
+from mongo_rest_deletados import *
 app = Flask("MENU")
 
 #rotas usuarios
@@ -45,6 +45,14 @@ def editar_restaurante(id):
 def deletar_restaurante(id):
     dic = rest_delete(id)
     return dic["resp"], dic["status_code"]
+
+
+
+#rotas restaurantes deletados
+@app.route('/restaurantes_deletados', methods=['GET'])
+def listar_restaurantes_deletados():
+    dic = rest_deletado_find()
+    return {'resp': dic["resp"], 'restaurantes_deletados': dic['restaurantes_deletados']}, dic["status_code"]
 
 if __name__ == '__main__':
     app.run(debug=True)
