@@ -35,6 +35,16 @@ def listar_restaurantes():
     dic = rest_find()
     return {'resp': dic["resp"], 'restaurantes': dic['restaurantes']}, dic["status_code"]
 
+@app.route('/restaurantes/<int:id>', methods=['PUT'])
+def editar_restaurante(id):
+    json = request.json
+    dic = rest_update(id, json)
+    return dic["resp"], dic["status_code"]
+
+@app.route('/restaurantes/<int:id>', methods=['DELETE', 'POST'])
+def deletar_restaurante(id):
+    dic = rest_delete(id)
+    return dic["resp"], dic["status_code"]
 
 if __name__ == '__main__':
     app.run(debug=True)
