@@ -19,10 +19,10 @@ def rest_add(json):
             'cnpj': json['cnpj'], #se for microempreendimento aceitar cpf
             'senha': json['senha'],
             'nota': [],
-            'categorias' : [],
-            'cardapio' : '',
-            'fotos' : [],
-            'badges' : []
+            'categorias' : [], #categoria perguntar marcelo
+            'cardapio' : '', #fzr funcao para adicionar cardapio
+            'fotos' : [], #fzr funcao para adicionar fotos
+            'badges' : [] #perguntar pro biforus oq é
             }
             db.counters.update_one({}, {'$inc':{'restaurantes_id':1}})
             db.restaurantes.insert_one(dic)
@@ -41,3 +41,25 @@ def rest_find(id=None):
             return {'resp': f'Erro: O restaurante <{id}> não existe', 'status_code': 404}
         else:
             return {'resp': f'Restaurante <{id}> encontrado com sucesso', 'restaurante': rest, 'status_code': 200}
+
+def rest_update(id, json):
+    rest = rest_find(id)
+    if rest['status_code'] == 200:
+        campos_possiveis = ['nome', 'email', 'localizacao', 'cnpj', 'senha']
+        for key in json.keys():
+            if key not in campos_possiveis:
+                return {'resp': f'Erro: O campo <{key}> não é suportado', 'status_code': 404}
+        for key in json.keys():
+            db.restaurantes.update_one({'_id': id}, {'$set': {key: json[key]}})
+        return {'resp': f'Restaurante <{id}> editado com sucesso', 'status_code': 200}
+    else:
+        return {'resp': f'Erro: O restaurante <{id}> não existe', 'status_code': 404}
+    
+def rest_delete(id):
+    rest = rest_find(id)
+    if rest['status_code'] == 200:
+        db.restaurantes_deletados.insert_one(rest['restaurante'])
+        db.restaurantes.delete_one({'_id': id})
+        return {'resp': f'Restaurante <{id}> deletado com sucesso', 'status_code': 200}
+    else:
+        return {'resp': f'Erro: O restaurante <{id}> não existe', 'status_code': 404}
