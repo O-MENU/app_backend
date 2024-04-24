@@ -26,7 +26,7 @@ def rest_add(json):
             }
             db.counters.update_one({}, {'$inc':{'restaurantes_id':1}})
             db.restaurantes.insert_one(dic)
-            return {'resp': 'Restaurante cadastrado com sucesso!', 'restaurante': dic, 'status_code': 201}
+            return {'resp':{'message':'Restaurante cadastrado com sucesso!', 'restaurante': dic}, 'status_code': 201}
         return {'resp':'Erro: Restaurante já existe!', 'status_code': 400}
     else:
         return {'resp':'Erro: Todos os campos são obrigatorios!', 'status_code': 400}
