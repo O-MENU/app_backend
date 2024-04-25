@@ -23,7 +23,8 @@ def user_add(json):
         'senha': json['senha'],
         'rest_fav': [],
         'comida_fav': [],
-        'amigos': [],	
+        'seguindo': [],	
+        'seguidores': [],
         'localizacao': [], #{'data_hora': '', latitude': 0, 'longitude': 0}
       }
       db.counters.update_one({}, {'$inc':{'usuarios_id':1}})
@@ -66,31 +67,33 @@ def user_delete(usuario_id):
   else:
     return {'resp': f'Erro: O usuario <{usuario_id}> não existe', 'status_code': 404}
 
-def user_amigo_add(usuario_id, amigo_id):
+def user_seguir_add(usuario_id, amigo_id):
   user = user_find(usuario_id)
   amigo = user_find(amigo_id)
   if user['status_code'] == 200 and amigo['status_code'] == 200:
     user = user['user']
     amigo = amigo['user']
-    for dic_amigo in user['amigos']:
+    for dic_amigo in user['seguindo']:
       if amigo_id == dic_amigo['_id']:
-        return {'resp': f'O usuario <{amigo_id}> (amigo) já esta na lista de amigos do usuario <{usuario_id}>', 'status_code': 400}
-    db.usuarios.update_one({'_id': usuario_id}, {'$push': {'amigos': {'_id': amigo_id, 'nome': amigo['nome']}}})
-    return {'resp': f'Usuario <{amigo_id}> (amigo) adicionado com sucesso ao usuario <{usuario_id}>', 'status_code': 200}
+        return {'resp': f'Erro: O usuario <{usuario_id}> já segue o usuario <{amigo_id}>', 'status_code': 400}
+    db.usuarios.update_one({'_id': usuario_id}, {'$push': {'seguindo': {'_id': amigo_id, 'nome': amigo['nome']}}})
+    db.usuarios.update_one({'_id': amigo_id}, {'$push': {'seguidores': {'_id': usuario_id, 'nome': user['nome']}}})
+    return {'resp': f'Usuario <{usuario_id}> começou a seguir o usuario <{amigo_id}>', 'status_code': 200}
   else:
-    return {'resp': f'Erro: Usuario <{usuario_id}> ou amigo <{amigo_id}> não existe', 'status_code': 404}
+    return {'resp': f'Erro: Usuario <{usuario_id}> ou <{amigo_id}> não existem', 'status_code': 404}
 
-def user_amigo_delete(usuario_id, amigo_id):
+def user_seguir_delete(usuario_id, amigo_id):
   user, amigo = user_find(usuario_id), user_find(amigo_id)
   if user['status_code'] == 200 and amigo['status_code'] == 200:
     user, amigo = user['user'], amigo['user'] 
-    for dic_amigo in user['amigos']:
+    for dic_amigo in user['seguindo']:
       if amigo_id == dic_amigo['_id']:
-        db.usuarios.update_one({'_id': usuario_id}, {'$pull': {'amigos': {'_id': amigo_id, 'nome': amigo['nome']}}})
-        return {'resp': f'O usuario <{amigo_id}> (amigo) foi removido da lista de amigos do usuario <{usuario_id}>', 'status_code': 200}
-    return {'resp': f'Usuario <{amigo_id}> ("amigo") não é amigo do usuario <{usuario_id}>', 'status_code': 200}
+        db.usuarios.update_one({'_id': usuario_id}, {'$pull': {'seguindo': {'_id': amigo_id, 'nome': amigo['nome']}}})
+        db.usuarios.update_one({'_id': amigo_id}, {'$pull': {'seguidores': {'_id': usuario_id, 'nome': user['nome']}}})
+        return {'resp': f'O usuario <{usuario_id}> parou de seguir o usuario <{amigo_id}>', 'status_code': 200}
+    return {'resp': f'Usuario <{usuario_id}> não segue o usuario <{amigo_id}>', 'status_code': 400}
   else:
-    return {'resp': f'Erro: Usuario <{usuario_id}> ou usuario <{amigo_id}> (amigo) não existe', 'status_code': 404}
+    return {'resp': f'Erro: Usuario <{usuario_id}> ou usuario <{amigo_id}> não existem', 'status_code': 404}
 
 def user_comida_add(usuario_id, comida):
   user = user_find(usuario_id)
@@ -212,4 +215,3 @@ def user_nota_add(usuario_id, rest_id, nota, motivos, comentario):
     return {'resp': f'Usuario <{usuario_id}> deu nota <{nota}> ao restaurante <{rest_id}>', 'status_code': 200}
   else:
     return {'resp': f'Erro: Usuario <{usuario_id}> ou restaurante <{rest_id}> não existe', 'status_code': 404}
-  
