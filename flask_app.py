@@ -14,12 +14,17 @@ def cadastrar_usuario():
     return dic["resp"], dic["status_code"]
 
 
+@app.route('/usuarios/<int:id>', methods=['GET'])
+def listar_usuarios_por_id(id):
+    dic = user_find(id)
+    if dic["status_code"] == 200:
+        return {'resp': dic["resp"], 'usuario': dic['user']}, dic["status_code"]
+    return {'resp': dic["resp"]}, dic["status_code"]
+
 @app.route('/usuarios', methods=['GET'])
 def listar_usuarios():
     dic = user_find()
     return {'resp': dic["resp"], 'usuarios': dic['users']}, dic["status_code"]
-
-
 
 
 #rotas restaurantes
@@ -35,6 +40,13 @@ def listar_restaurantes():
     dic = rest_find()
     return {'resp': dic["resp"], 'restaurantes': dic['restaurantes']}, dic["status_code"]
 
+@app.route('/restaurantes/<int:id>', methods=['GET'])
+def listar_restaurante_por_id(id):
+    dic = rest_find(id)
+    if dic["status_code"] == 200:
+        return {'resp': dic["resp"], 'restaurante': dic['restaurante']}, dic["status_code"]
+    return {'resp': dic["resp"]}, dic["status_code"]
+
 @app.route('/restaurantes/<int:id>', methods=['PUT'])
 def editar_restaurante(id):
     json = request.json
@@ -45,7 +57,6 @@ def editar_restaurante(id):
 def deletar_restaurante(id):
     dic = rest_delete(id)
     return dic["resp"], dic["status_code"]
-
 
 
 #rotas restaurantes deletados
