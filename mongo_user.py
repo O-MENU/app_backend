@@ -1,13 +1,15 @@
 #create user
 import pymongo
 import pprint
+import statistics
 from utils import campos_obrigatorios
-
+from mongo_rest import rest_find
 client = pymongo.MongoClient('mongodb+srv://henriquebrnetto02:2K4y7AIS4IOddUkC@menu.cyvtolc.mongodb.net/?retryWrites=true&w=majority&appName=MENU')
 
 db = client['MENU']
 counter = db.counters.find_one()
 usuario_id = counter['usuarios_id']
+avaliacao_id = counter['avaliacoes_id']
 
 def user_add(json):
   if campos_obrigatorios(json, ['nome', 'email', 'data', 'senha']):
@@ -21,9 +23,9 @@ def user_add(json):
         'senha': json['senha'],
         'rest_fav': [],
         'comida_fav': [],
-        'amigos': [],	
+        'seguindo': [],	
+        'seguidores': [],
         'localizacao': [], #{'data_hora': '', latitude': 0, 'longitude': 0}
-        'rest_avaliados':[] #{'rest_id': 0, 'nota': 0}
       }
       db.counters.update_one({}, {'$inc':{'usuarios_id':1}})
       db.usuarios.insert_one(dic)
@@ -33,58 +35,183 @@ def user_add(json):
   else:
     return {'resp':'Erro: Todos os campos são obrigatorios!', 'status_code': 400}
 
-def user_find(id=None):
-  if id == None:
+def user_find(usuario_id=None):
+  if usuario_id == None:
     users = db.usuarios.find()
     return {'resp': 'Usuarios encontrados com sucesso', 'users': list(users), 'status_code': 200}
   else:
-    user = db.usuarios.find_one({'_id': id})
+    user = db.usuarios.find_one({'_id': usuario_id})
     if user == None:
-      return {'resp': f'Erro: O usuario <{id}> não existe', 'status_code': 404}
+      return {'resp': f'Erro: O usuario <{usuario_id}> não existe', 'status_code': 404}
     else:
-      return {'resp': f'Usuario <{id}> encontrado com sucesso', 'user': user, 'status_code': 200}
+      return {'resp': f'Usuario <{usuario_id}> encontrado com sucesso', 'user': user, 'status_code': 200}
 
-def user_update(id, json):
-  user = user_find(id)
+def user_update(usuario_id, json):
+  user = user_find(usuario_id)
   if user['status_code'] == 200:
-    campos_possiveis = ['nome', 'email', 'data', 'senha']
-    for key in json.keys():
-      if key not in campos_possiveis:
-        return {'resp': f'Erro: O campo <{key}> não é suportado', 'status_code': 404}
-    for key in json.keys():
-      db.usuarios.update_one({'_id': id}, {'$set': {key: json[key]}})
-    return {'resp': f'Usuario <{id}> editado com sucesso', 'status_code': 200}
+    if campos_obrigatorios(json, ['nome', 'email', 'data', 'senha']):
+      for key in json.keys():
+        db.usuarios.update_one({'_id': usuario_id}, {'$set': {key: json[key]}})
+      return {'resp': f'Usuario <{usuario_id}> editado com sucesso', 'status_code': 200}
+    else:
+      return {'resp': f'Erro: O campo <{key}> não é suportado / json vazio', 'status_code': 404}
   else:
-    return {'resp': f'Erro: O usuario <{id}> não existe', 'status_code': 404}
+    return {'resp': f'Erro: O usuario <{usuario_id}> não existe', 'status_code': 404}
 
-def user_delete(id):
-  user = user_find(id)
+def user_delete(usuario_id):
+  user = user_find(usuario_id)
   if user['status_code'] == 200:
-    db.usuarios.delete_one({'_id': id})
-    return {'resp': f'O usuario <{id}> foi deletado com sucesso', 'status_code': 200}
+    db.usuarios_deletados.insert_one(user['user'])
+    db.usuarios.delete_one({'_id': usuario_id})
+    return {'resp': f'O usuario <{usuario_id}> foi deletado com sucesso', 'status_code': 200}
   else:
-    return {'resp': f'Erro: O usuario <{id}> não existe', 'status_code': 404}
+    return {'resp': f'Erro: O usuario <{usuario_id}> não existe', 'status_code': 404}
 
-def user_amigo_add(usuario_id, amigo_id):
+def user_seguir_add(usuario_id, amigo_id):
   user = user_find(usuario_id)
   amigo = user_find(amigo_id)
   if user['status_code'] == 200 and amigo['status_code'] == 200:
     user = user['user']
     amigo = amigo['user']
-    for dic_amigo in user['amigos']:
+    for dic_amigo in user['seguindo']:
       if amigo_id == dic_amigo['_id']:
-        return {'resp': f'O usuario <{amigo_id}> (amigo) já esta na lista de amigos do usuario <{usuario_id}>', 'status_code': 400}
-
-    db.usuarios.update_one({'_id': usuario_id}, {'$push': {'amigos': {'_id': amigo_id, 'nome': amigo['nome']}}})
-    return {'resp': f'Usuario <{amigo_id}> (amigo) adicionado com sucesso ao usuario <{usuario_id}>', 'status_code': 200}
+        return {'resp': f'Erro: O usuario <{usuario_id}> já segue o usuario <{amigo_id}>', 'status_code': 400}
+    db.usuarios.update_one({'_id': usuario_id}, {'$push': {'seguindo': {'_id': amigo_id, 'nome': amigo['nome']}}})
+    db.usuarios.update_one({'_id': amigo_id}, {'$push': {'seguidores': {'_id': usuario_id, 'nome': user['nome']}}})
+    return {'resp': f'Usuario <{usuario_id}> começou a seguir o usuario <{amigo_id}>', 'status_code': 200}
   else:
-    return {'resp': f'Erro: Usuario <{usuario_id}> ou amigo <{amigo_id}> não existe', 'status_code': 404}
+    return {'resp': f'Erro: Usuario <{usuario_id}> ou <{amigo_id}> não existem', 'status_code': 404}
 
-def user_comida_add(id, comida):
-  user = user_find(id)
+def user_seguir_delete(usuario_id, amigo_id):
+  user, amigo = user_find(usuario_id), user_find(amigo_id)
+  if user['status_code'] == 200 and amigo['status_code'] == 200:
+    user, amigo = user['user'], amigo['user'] 
+    for dic_amigo in user['seguindo']:
+      if amigo_id == dic_amigo['_id']:
+        db.usuarios.update_one({'_id': usuario_id}, {'$pull': {'seguindo': {'_id': amigo_id, 'nome': amigo['nome']}}})
+        db.usuarios.update_one({'_id': amigo_id}, {'$pull': {'seguidores': {'_id': usuario_id, 'nome': user['nome']}}})
+        return {'resp': f'O usuario <{usuario_id}> parou de seguir o usuario <{amigo_id}>', 'status_code': 200}
+    return {'resp': f'Usuario <{usuario_id}> não segue o usuario <{amigo_id}>', 'status_code': 400}
+  else:
+    return {'resp': f'Erro: Usuario <{usuario_id}> ou usuario <{amigo_id}> não existem', 'status_code': 404}
+
+def user_comida_add(usuario_id, comida):
+  user = user_find(usuario_id)
   if user['status_code'] == 200:
     user = user['user']
-    db.usuarios.update_one({'_id': id}, {'$push': {'comida_fav': comida}})
-    return {'resp': f'Comida <{comida}> adicionada ao usuario <{id}>', 'status_code': 200}
+    if comida not in user['comida_fav']:
+      db.usuarios.update_one({'_id': usuario_id}, {'$push': {'comida_fav': comida}})
+      return {'resp': f'Comida <{comida}> adicionada ao usuario <{usuario_id}>', 'status_code': 200}
+    else:
+      return {'resp': f'O usuario <{usuario_id}> já favoritou a comida <{comida}>', 'status_code': 400}
   else:
-    return {'resp': f'Erro: O usuario <{id}> não existe', 'status_code': 404}
+    return {'resp': f'Erro: O usuario <{usuario_id}> não existe', 'status_code': 404}
+
+def user_comida_delete(usuario_id, comida):
+  user = user_find(usuario_id)
+  if user['status_code'] == 200:
+    user = user['user']
+    if comida in user['comida_fav']:
+      db.usuarios.update_one({'_id': usuario_id}, {'$pull': {'comida_fav': comida}})
+      return {'resp': f'Comida <{comida}> removida com sucesso do usuario <{usuario_id}>', 'status_code': 200}
+    else:
+      return {'resp': f'Comida <{comida}> não esta na lista de favoritas do usuario <{usuario_id}>', 'status_code': 400}
+  else:
+    return {'resp': f'Erro: O usuario <{usuario_id}> não existe', 'status_code': 404}
+
+def user_rest_add(usuario_id, rest_id):
+  user, rest = user_find(usuario_id), rest_find(rest_id)
+  if user['status_code'] == 200 and rest['status_code'] == 200:
+    user, rest = user['user'], rest['restaurante']
+    for rest in user['rest_fav']:
+      if rest_id == rest['_id']:
+        return {'resp': f'Erro: O restaurante <{rest_id}> já esta favoritado pelo usuario <{usuario_id}>', 'status_code': 400}
+    db.usuarios.update_one({'_id': usuario_id}, {'$push': {'rest_fav': {'_id': rest_id, 'nome': rest['nome']}}})
+    return {'resp': f'Restaurante <{rest_id}> adicionado com sucesso aos favoritos do usuario <{usuario_id}>', 'status_code': 200}
+  else:
+    return {'resp': f'Erro: Usuario <{usuario_id}> ou restaurante <{rest_id}> não existe'}
+
+def user_rest_delete(usuario_id, rest_id):
+  user, rest = user_find(usuario_id), rest_find(rest_id)
+  if user['status_code'] == 200 and rest['status_code'] == 200:
+    user, rest = user['user'], rest['restaurante']
+    for rest in user['rest_fav']:
+      if rest_id == rest['_id']:
+        db.usuarios.update_one({'_id': usuario_id}, {'$pull': {'rest_fav': {'_id': rest_id, 'nome': rest['nome']}}})
+        return {'resp': f'Restaurante <{rest_id}> removido com sucesso do usuario <{usuario_id}>', 'status_code': 200}
+    return {'resp': f'Erro: O restaurante <{rest_id}> não esta na lista de favoritos do usuario <{usuario_id}>', 'status_code': 400}
+  else:
+    return {'resp': f'Erro: Usuario <{usuario_id}> ou restaurante <{rest_id}> não existe', 'status_code': 404}
+  
+def avaliacao_find(usuario_id=None, rest_id=None):
+  user, rest = user_find(usuario_id), rest_find(rest_id)
+  if usuario_id == None and rest_id == None:
+    avaliacoes = db.avaliacoes.find()
+    return {'resp': 'Avaliações listadas com sucesso', 'avaliacoes': list(avaliacoes), 'status_code': 200}
+  elif usuario_id != None and rest_id == None:
+    if user['status_code'] == 200:
+      avaliacoes = db.avaliacoes.find({'usuario_id': {'$all': [usuario_id]}})
+      avaliacoes = list(avaliacoes)
+      if avaliacoes == []:
+        return {'resp': f'Erro: O usuario <{usuario_id}> não fez nenhuma avaliacão'}
+      else:
+        return {'resp': f'Avaliações do usuario <{usuario_id}> listadas com sucesso', 'avaliacoes': avaliacoes, 'status_code': 200}
+    else:
+      return {'resp': f'O usuario <{usuario_id}> não existe', 'status_code': 404}
+  elif usuario_id == None and rest_id != None:
+    if rest['status_code'] == 200:
+      avaliacoes = db.avaliacoes.find({'restaurante_id': {'$all': [rest_id]}})
+      avaliacoes = list(avaliacoes)
+      if avaliacoes == []:
+        return {'resp': f'Erro: O restaurante <{rest_id}> não tem nenhuma avaliacão'}
+      else:
+        return {'resp': f'Avaliações do restaurante <{rest_id}> listadas com sucesso', 'avaliacoes': avaliacoes, 'status_code': 200}
+    else:
+      return {'resp': f'O restaurante <{rest_id}> não existe', 'status_code': 404}
+  else:
+    if user['status_code'] == 200 and rest['status_code'] == 200:
+      avaliacao = db.avaliacoes.find_one({'usuario_id': usuario_id, 'restaurante_id': rest_id})
+      if avaliacao == None:
+        return {'resp': f'O usuario <{usuario_id}> não fez nenhuma avaliação do restaurante <{rest_id}>', 'status_code': 400}
+      else:
+        return {'resp': f'Avaliação do usuario <{usuario_id}> do restaurante <{rest_id}>', 'avaliacao': avaliacao, 'status_code': 200}    
+    
+def user_nota_add(usuario_id, rest_id, nota, motivos, comentario):
+  if nota > 5 or nota < 0:
+    return {'resp': 'Erro: Nota invalida, notas validas => [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5]', 'status_code': 404}
+  user, rest, avaliacao= user_find(usuario_id), rest_find(rest_id), avaliacao_find(usuario_id, rest_id)
+  if user['status_code'] == 200 and rest['status_code'] == 200:
+    user, rest = user['user'], rest['restaurante']
+    if avaliacao['status_code'] == 400:
+      dic = {
+        '_id': avaliacao_id,
+        'restaurante_id': rest_id,
+        'usuario_id': usuario_id,
+        'nota': nota,
+        'motivos': motivos,
+        'comentario': comentario
+      }
+      db.avaliacoes.insert_one(dic)
+    else:
+      dic = {
+        '_id': avaliacao_id,
+        'restaurante_id': rest_id,
+        'usuario_id': usuario_id,
+        'nota': nota,
+        'motivos': motivos,
+        'comentario': comentario
+      }
+      db.avaliacoes.update_one({'_id': avaliacao['avaliacao']['_id']}, {'$set': dic})
+    db.counters.update_one({}, {'$inc': {'avaliacoes_id': 1}})
+    avaliacoes = avaliacao_find(None, rest_id)
+    notas = []
+    if len(avaliacoes) > 0:
+      for ava in avaliacoes['avaliacoes']:
+        notas.append(ava['nota'])
+      nota_rest = statistics.mean(notas)
+    else:
+      nota_rest = nota
+    db.restaurantes.update_one({'_id': rest_id}, {'$set': {'nota': float(f'{nota_rest:.1f}')}})
+    return {'resp': f'Usuario <{usuario_id}> deu nota <{nota}> ao restaurante <{rest_id}>', 'status_code': 200}
+  else:
+    return {'resp': f'Erro: Usuario <{usuario_id}> ou restaurante <{rest_id}> não existe', 'status_code': 404}
