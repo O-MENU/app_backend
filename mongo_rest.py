@@ -1,21 +1,20 @@
 import pymongo
-from utils import campos_obrigatorios
+from utils import campos_obrigatorios, conn_mongo, busca_loc
 
-client = pymongo.MongoClient('mongodb+srv://henriquebrnetto02:2K4y7AIS4IOddUkC@menu.cyvtolc.mongodb.net/?retryWrites=true&w=majority&appName=MENU')
+client, db = conn_mongo()
 
-db = client['MENU']
 counter = db.counters.find_one()
 restaurante_id = counter['restaurantes_id']
 
 def rest_add(json):
     if campos_obrigatorios(json, ['nome', 'email', 'localizacao', 'cnpj', 'senha']):
-        rest = db.usuarios.find_one({'cnpj' : json['cnpj']})
+        rest = db.restaurantes.find_one({'cnpj' : json['cnpj']})
         if rest == None:
             dic = {
             '_id': restaurante_id,
             'nome': json['nome'],
             'email': json['email'],
-            'localizacao': json['localizacao'], #endereço (rua, nº - bairro, cidade - sigla estado, cep)
+            'localizacao': {'endereco' : json['localizacao'], 'geoloc' : busca_loc(json['localizacao'])}, #endereço (rua, nº - bairro, cidade - sigla estado, cep)
             'cnpj': json['cnpj'], #se for microempreendimento aceitar cpf
             'senha': json['senha'],
             'nota': [],

@@ -19,9 +19,6 @@ def listar_usuarios():
     dic = user_find()
     return {'resp': dic["resp"], 'usuarios': dic['users']}, dic["status_code"]
 
-
-
-
 #rotas restaurantes
 @app.route('/restaurantes', methods=['POST'])
 def cadastrar_restaurante():
@@ -45,7 +42,6 @@ def editar_restaurante(id):
 def deletar_restaurante(id):
     dic = rest_delete(id)
     return dic["resp"], dic["status_code"]
-
 
 
 #rotas restaurantes deletados

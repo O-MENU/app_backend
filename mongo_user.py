@@ -2,11 +2,11 @@
 import pymongo
 import pprint
 import statistics
-from utils import campos_obrigatorios
+from utils import campos_obrigatorios, conn_mongo
 from mongo_rest import rest_find
-client = pymongo.MongoClient('mongodb+srv://henriquebrnetto02:2K4y7AIS4IOddUkC@menu.cyvtolc.mongodb.net/?retryWrites=true&w=majority&appName=MENU')
 
-db = client['MENU']
+client, db = conn_mongo()
+
 counter = db.counters.find_one()
 usuario_id = counter['usuarios_id']
 avaliacao_id = counter['avaliacoes_id']
@@ -25,7 +25,7 @@ def user_add(json):
         'comida_fav': [],
         'seguindo': [],	
         'seguidores': [],
-        'localizacao': [], #{'data_hora': '', latitude': 0, 'longitude': 0}
+        'localizacao': [], #{'data_hora': '', 'lat': 0, 'lng': 0}
       }
       db.counters.update_one({}, {'$inc':{'usuarios_id':1}})
       db.usuarios.insert_one(dic)
