@@ -215,3 +215,37 @@ def user_nota_add(usuario_id, rest_id, nota, motivos, comentario):
     return {'resp': f'Usuario <{usuario_id}> deu nota <{nota}> ao restaurante <{rest_id}>', 'status_code': 200}
   else:
     return {'resp': f'Erro: Usuario <{usuario_id}> ou restaurante <{rest_id}> não existe', 'status_code': 404}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#############FUNCAO REST POR CONTA DE CIRCULAR IMPORT###########################################################
+def rest_possiveis_clientes(id):
+    possiveis_clientes = []
+    rest = rest_find(id)
+    if rest == None:
+        return {'resp': f'Erro: O restaurante <{id}> não foi encontrado', 'status_code': 404}
+    preferencias = rest['restaurante']['categorias']
+    usuarios = user_find()
+    for user in usuarios['users']:
+        for categoria in preferencias:
+            if  categoria in user['comida_fav']:
+                if user not in possiveis_clientes:
+                    possiveis_clientes.append(user)
+    if len(possiveis_clientes) == 0:
+        return {'resp': f'Erro: Nenhum possivel cliente encontrado para o restaurante <{id}>', 'status_code': 404}
+    return {'resp': f'Possiveis clientes do restaurante <{id}> encontrados com sucesso', 'possiveis_clientes': possiveis_clientes, 'status_code': 200}

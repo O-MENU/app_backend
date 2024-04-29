@@ -58,6 +58,12 @@ def deletar_restaurante(id):
     dic = rest_delete(id)
     return dic["resp"], dic["status_code"]
 
+@app.route('/restaurantes/<int:id>/possiveis_clientes', methods=['GET'])
+def listar_possiveis_clientes(id):
+    dic = rest_possiveis_clientes(id)
+    if dic["status_code"] == 200:
+        return {'resp': dic["resp"], 'possiveis_clientes': dic['possiveis_clientes']}, dic["status_code"]
+    return {'resp': dic["resp"]}, dic["status_code"]
 
 #rotas restaurantes deletados
 @app.route('/restaurantes_deletados', methods=['GET'])
