@@ -11,6 +11,7 @@ counter = db.counters.find_one()
 usuario_id = counter['usuarios_id']
 avaliacao_id = counter['avaliacoes_id']
 
+# cadastro de usuario
 def user_add(json):
   if campos_obrigatorios(json, ['nome', 'email', 'data', 'senha']):
     user = db.usuarios.find_one({'email':json['email']})
@@ -35,6 +36,7 @@ def user_add(json):
   else:
     return {'resp':'Erro: Todos os campos são obrigatorios!', 'status_code': 400}
 
+# acha usuario por id ou lista todos os usuarios
 def user_find(usuario_id=None):
   if usuario_id == None:
     users = db.usuarios.find()
@@ -46,6 +48,7 @@ def user_find(usuario_id=None):
     else:
       return {'resp': f'Usuario <{usuario_id}> encontrado com sucesso', 'user': user, 'status_code': 200}
 
+# atualiza informacoes basicas do usuario (nome, email, data de nascimento, senha)
 def user_update(usuario_id, json):
   user = user_find(usuario_id)
   if user['status_code'] == 200:
@@ -58,6 +61,7 @@ def user_update(usuario_id, json):
   else:
     return {'resp': f'Erro: O usuario <{usuario_id}> não existe', 'status_code': 404}
 
+# deleta usuario pelo id
 def user_delete(usuario_id):
   user = user_find(usuario_id)
   if user['status_code'] == 200:
@@ -67,6 +71,7 @@ def user_delete(usuario_id):
   else:
     return {'resp': f'Erro: O usuario <{usuario_id}> não existe', 'status_code': 404}
 
+# usuario 1 segue usuario 2
 def user_seguir_add(usuario_id, amigo_id):
   user = user_find(usuario_id)
   amigo = user_find(amigo_id)
@@ -82,6 +87,7 @@ def user_seguir_add(usuario_id, amigo_id):
   else:
     return {'resp': f'Erro: Usuario <{usuario_id}> ou <{amigo_id}> não existem', 'status_code': 404}
 
+# usuario 1 para de seguir usuario 2
 def user_seguir_delete(usuario_id, amigo_id):
   user, amigo = user_find(usuario_id), user_find(amigo_id)
   if user['status_code'] == 200 and amigo['status_code'] == 200:
@@ -95,6 +101,7 @@ def user_seguir_delete(usuario_id, amigo_id):
   else:
     return {'resp': f'Erro: Usuario <{usuario_id}> ou usuario <{amigo_id}> não existem', 'status_code': 404}
 
+# adiciona comida fav ao usuario. (futuramente refatorar comida para lista)
 def user_comida_add(usuario_id, comida):
   user = user_find(usuario_id)
   if user['status_code'] == 200:
@@ -107,6 +114,7 @@ def user_comida_add(usuario_id, comida):
   else:
     return {'resp': f'Erro: O usuario <{usuario_id}> não existe', 'status_code': 404}
 
+# retira comida da lista de favoritos do usuario 
 def user_comida_delete(usuario_id, comida):
   user = user_find(usuario_id)
   if user['status_code'] == 200:
@@ -119,6 +127,7 @@ def user_comida_delete(usuario_id, comida):
   else:
     return {'resp': f'Erro: O usuario <{usuario_id}> não existe', 'status_code': 404}
 
+# adiciona restaurante fav ao perfil do usuario 
 def user_rest_add(usuario_id, rest_id):
   user, rest = user_find(usuario_id), rest_find(rest_id)
   if user['status_code'] == 200 and rest['status_code'] == 200:
@@ -131,6 +140,7 @@ def user_rest_add(usuario_id, rest_id):
   else:
     return {'resp': f'Erro: Usuario <{usuario_id}> ou restaurante <{rest_id}> não existe'}
 
+# retira restaurnte fav do perfil do usuario
 def user_rest_delete(usuario_id, rest_id):
   user, rest = user_find(usuario_id), rest_find(rest_id)
   if user['status_code'] == 200 and rest['status_code'] == 200:
@@ -142,7 +152,11 @@ def user_rest_delete(usuario_id, rest_id):
     return {'resp': f'Erro: O restaurante <{rest_id}> não esta na lista de favoritos do usuario <{usuario_id}>', 'status_code': 400}
   else:
     return {'resp': f'Erro: Usuario <{usuario_id}> ou restaurante <{rest_id}> não existe', 'status_code': 404}
-  
+
+# tipo 1) avaliacao_find(usuario_id, rest_id) => Avaliacao que o usuario x deu ao restaurante y
+# tipo 2) avaliacao_find(usuario_id, _) => Lista todas as avaliacoes que o usuario x fez
+# tipo 3) avaliacao_find(_, rest_id) => Lista todas as avaliacoes que o restaurante y recebeu
+#tipo 4) avaliacao_find(_, _) => Lista TODAS as avaliacoes do banco de dados
 def avaliacao_find(usuario_id=None, rest_id=None):
   user, rest = user_find(usuario_id), rest_find(rest_id)
   if usuario_id == None and rest_id == None:
@@ -175,7 +189,8 @@ def avaliacao_find(usuario_id=None, rest_id=None):
         return {'resp': f'O usuario <{usuario_id}> não fez nenhuma avaliação do restaurante <{rest_id}>', 'status_code': 400}
       else:
         return {'resp': f'Avaliação do usuario <{usuario_id}> do restaurante <{rest_id}>', 'avaliacao': avaliacao, 'status_code': 200}    
-    
+
+# adiciona uma avaliacao do usuario x ao restaurante y, recebe (usuario_id; rest_id; nota de 0 a 5; "motivos" é como, 'o que podemos melhorar', uma lista de avaliacoes pre definidas como = [sabor, tempero, quantidade, temperatura, prato errado]; comentario sobre o restaurante)
 def user_nota_add(usuario_id, rest_id, nota, motivos, comentario):
   if nota > 5 or nota < 0:
     return {'resp': 'Erro: Nota invalida, notas validas => [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5]', 'status_code': 404}

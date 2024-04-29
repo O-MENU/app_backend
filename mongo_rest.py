@@ -8,7 +8,7 @@ counter = db.counters.find_one()
 restaurante_id = counter['restaurantes_id']
 
 def rest_add(json):
-    if campos_obrigatorios(json, ['nome', 'email', 'localizacao', 'cnpj', 'senha']):
+    if campos_obrigatorios(json, ['nome', 'email', 'localizacao', 'cnpj', 'senha', 'categorias']):
         rest = db.usuarios.find_one({'cnpj' : json['cnpj']})
         if rest == None:
             dic = {
@@ -18,8 +18,8 @@ def rest_add(json):
             'localizacao': json['localizacao'], #endereço (rua, nº - bairro, cidade - sigla estado, cep)
             'cnpj': json['cnpj'], #se for microempreendimento aceitar cpf
             'senha': json['senha'],
+            'categorias': json['categorias'], #categoria perguntar marcelo
             'nota': [],
-            'categorias' : [], #categoria perguntar marcelo
             'cardapio' : '', #fzr funcao para adicionar cardapio
             'fotos' : [], #fzr funcao para adicionar fotos
             'badges' : [] #perguntar pro biforus oq é
