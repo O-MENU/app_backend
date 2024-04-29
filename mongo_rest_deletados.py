@@ -1,7 +1,8 @@
 import pymongo
-client = pymongo.MongoClient('mongodb+srv://henriquebrnetto02:2K4y7AIS4IOddUkC@menu.cyvtolc.mongodb.net/?retryWrites=true&w=majority&appName=MENU')
+from utils import conn_mongo
 
-db = client['MENU']
+client, db = conn_mongo()
+
 def rest_deletado_find(id=None):
     if id == None:
         rests = db.restaurantes_deletados.find()
