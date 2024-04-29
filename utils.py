@@ -45,5 +45,3 @@ def calcula_dist(user_loc, rest_loc):
     dist_carro = requests.get(url_carro).json()['routes'][0]['sections'][0]['travelSummary']['length']
 
     return {'carro' : dist_carro, 'pedestre' : dist_pedestre}
-
-print(calcula_dist(busca_loc('1901 S Atlantic Ave, Daytona Beach', 'Orlando'), busca_loc('200 Rialto PI, Melbourne', 'Orlando')))
