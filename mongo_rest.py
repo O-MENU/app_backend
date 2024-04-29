@@ -1,6 +1,5 @@
 import pymongo
 from utils import campos_obrigatorios
-
 client = pymongo.MongoClient('mongodb+srv://henriquebrnetto02:2K4y7AIS4IOddUkC@menu.cyvtolc.mongodb.net/?retryWrites=true&w=majority&appName=MENU')
 
 db = client['MENU']
@@ -22,7 +21,7 @@ def rest_add(json):
             'nota': [],
             'cardapio' : '', #fzr funcao para adicionar cardapio
             'fotos' : [], #fzr funcao para adicionar fotos
-            'badges' : [] #perguntar pro biforus oq é
+            'badges' : [], #perguntar pro biforus oq é
             }
             db.counters.update_one({}, {'$inc':{'restaurantes_id':1}})
             db.restaurantes.insert_one(dic)
@@ -63,3 +62,4 @@ def rest_delete(id):
         return {'resp': f'Restaurante <{id}> deletado com sucesso', 'status_code': 200}
     else:
         return {'resp': f'Erro: O restaurante <{id}> não existe', 'status_code': 404}
+
