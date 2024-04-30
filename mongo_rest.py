@@ -63,3 +63,4 @@ def rest_delete(id):
     else:
         return {'resp': f'Erro: O restaurante <{id}> não existe', 'status_code': 404}
 
+
