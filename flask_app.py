@@ -65,6 +65,29 @@ def listar_possiveis_clientes(id):
         return {'resp': dic["resp"], 'possiveis_clientes': dic['possiveis_clientes']}, dic["status_code"]
     return {'resp': dic["resp"]}, dic["status_code"]
 
+@app.route('/restaurantes/<int:id>/adicionar_prato', methods=['PUT'])
+def adiciona_prato(id):
+    json = request.json
+    dic = adicionar_prato(id, json)
+    if dic["status_code"] == 201:
+        return {'resp': dic["resp"], 'restaurante': dic['restaurante']}, dic["status_code"]
+    return dic["resp"], dic["status_code"]
+
+@app.route('/restaurantes/<int:id>/cardapio', methods=['GET'])
+def find_cardapio(id):
+    dic = get_cardapio(id)
+    if dic["status_code"] == 200:
+        return {'resp': dic["resp"], 'cardapio': dic['cardapio']}, dic["status_code"]
+    return {'resp': dic["resp"]}, dic["status_code"]
+
+@app.route('/restaurantes/<int:id>/adicionar_foto', methods=['PUT'])	
+def add_foto(id):
+    json = request.json
+    dic = adiciona_foto(id, json)
+    if dic["status_code"] == 200:
+        return {'resp': dic["resp"], 'restaurante': dic['restaurante']}, dic["status_code"]
+    return dic["resp"], dic["status_code"]
+
 #rotas restaurantes deletados
 @app.route('/restaurantes_deletados', methods=['GET'])
 def listar_restaurantes_deletados():
