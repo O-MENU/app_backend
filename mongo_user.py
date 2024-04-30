@@ -2,11 +2,11 @@
 import pymongo
 import pprint
 import statistics
-from utils import campos_obrigatorios
+from utils import campos_obrigatorios, conn_mongo
 from mongo_rest import rest_find
-client = pymongo.MongoClient('mongodb+srv://henriquebrnetto02:2K4y7AIS4IOddUkC@menu.cyvtolc.mongodb.net/?retryWrites=true&w=majority&appName=MENU')
 
-db = client['MENU']
+client, db = conn_mongo()
+
 counter = db.counters.find_one()
 usuario_id = counter['usuarios_id']
 avaliacao_id = counter['avaliacoes_id']
@@ -26,7 +26,7 @@ def user_add(json):
         'comida_fav': [],
         'seguindo': [],	
         'seguidores': [],
-        'localizacao': [], #{'data_hora': '', latitude': 0, 'longitude': 0}
+        'localizacao': [], #{'data_hora': '', 'lat': 0, 'lng': 0}
       }
       db.counters.update_one({}, {'$inc':{'usuarios_id':1}})
       db.usuarios.insert_one(dic)
@@ -234,26 +234,14 @@ def user_nota_add(usuario_id, rest_id, nota, motivos, comentario):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #############FUNCAO REST POR CONTA DE CIRCULAR IMPORT###########################################################
-def rest_possiveis_clientes(id):
+
+
+def rest_possiveis_clientes(rest_id):
     possiveis_clientes = []
-    rest = rest_find(id)
+    rest = rest_find(rest_id)
     if rest == None:
-        return {'resp': f'Erro: O restaurante <{id}> não foi encontrado', 'status_code': 404}
+        return {'resp': f'Erro: O restaurante <{rest_id}> não foi encontrado', 'status_code': 404}
     preferencias = rest['restaurante']['categorias']
     usuarios = user_find()
     for user in usuarios['users']:
@@ -262,5 +250,5 @@ def rest_possiveis_clientes(id):
                 if user not in possiveis_clientes:
                     possiveis_clientes.append(user)
     if len(possiveis_clientes) == 0:
-        return {'resp': f'Erro: Nenhum possivel cliente encontrado para o restaurante <{id}>', 'status_code': 404}
-    return {'resp': f'Possiveis clientes do restaurante <{id}> encontrados com sucesso', 'possiveis_clientes': possiveis_clientes, 'status_code': 200}
+        return {'resp': f'Erro: Nenhum possivel cliente encontrado para o restaurante <{rest_id}>', 'status_code': 404}
+    return {'resp': f'Possiveis clientes do restaurante <{rest_id}> encontrados com sucesso', 'possiveis_clientes': possiveis_clientes, 'status_code': 200}
