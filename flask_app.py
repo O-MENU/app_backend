@@ -26,7 +26,42 @@ def listar_usuarios():
     dic = user_find()
     return {'resp': dic["resp"], 'usuarios': dic['users']}, dic["status_code"]
 
+@app.route('/usuarios/<int:id>', methods=['DELETE'])
+def deleta_usuario(id):
+    dic = user_delete(id)
+    return dic['resp'], dic['status_code']
 
+@app.route('usuarios/<int:id1>/<int:id2>', methods=['PUT'])
+def seguir_usuario(id1, id2):
+    dic = user_seguir_add(id1, id2)
+    return dic['resp'], dic['status_code']
+
+@app.route('usuarios/<int:id1>/<int:id2>', methods=['DELETE'])
+def deixar_de_seguir(id1, id2):
+    dic = user_seguir_delete(id1, id2)
+    return dic['resp'], dic['status_code']
+
+@app.route('usuarios/<int:id>/<list:comidas>', methods=['PUT'])
+def adicionar_comida_fav(id, comidas):
+    dic = user_comida_add(id, comidas)
+    return dic['resp'], dic['status_code']
+
+@app.route('usuarios/<int:id>/<list:comidas>', methods=['DELETE'])
+def deleta_comida_fav(id, comidas):
+    dic = user_comida_delete(id, comidas)
+    return dic['resp'], dic['status_code']
+
+@app.route('usuarios/<int:id1>/restaurante/<int:id2>', methods=['PUT'])
+def adiciona_rest_fav(id1, id2):
+    dic = user_rest_add(id1, id2)
+    return dic['resp'], dic['status_code']
+
+@app.route('usuarios/<int:id1>/restaurante/<int:id2>', methods=['DELETE'])
+def deleta_rest_fav(id1, id2):
+    dic = user_rest_delete(id1, id2)
+    return dic['resp'], dic['status_code']
+
+#--------------------------------------------------------------------------------------------#
 #rotas restaurantes
 @app.route('/restaurantes', methods=['POST'])
 def cadastrar_restaurante():
@@ -70,6 +105,45 @@ def listar_possiveis_clientes(id):
 def listar_restaurantes_deletados():
     dic = rest_deletado_find()
     return {'resp': dic["resp"], 'restaurantes_deletados': dic['restaurantes_deletados']}, dic["status_code"]
+
+
+#--------------------------------------------------------------------------------------------#
+
+# rotas avaliacoes
+
+@app.route('avaliacoes/usuarios/<int:id1>/restaurantes/<int:id2>/<int:nota>/<list:motivos>/<str:comentario>')
+def fazer_avaliacao_do_restaurante(id1, id2, nota, motivos, comentario):
+    dic = user_avaliacao_add(id1, id2, nota, motivos, comentario)
+    return dic['resp'], dic['status_code']
+
+@app.route('/avaliacoes', methods=['GET'])
+def todas_as_avaliacoes():
+    dic = avaliacao_find()
+    return {'resp': dic['resp'], 'avaliacoes': dic['avaliacoes']}, dic['status_code']
+
+@app.route('avaliacoes/usuarios/<int:id>', methods=['GET'])
+def avaliacoes_do_usuario(id):
+    dic = avaliacao_find(id)
+    if dic['status_code'] == 200:
+        return {'resp': dic['resp'], 'avaliacoes': dic['avaliacoes']}, dic['status_code']
+    else:
+        return dic['resp'], dic['status_code']
+    
+@app.route('avaliacoes/restaurantes/<int:id>',methods=['GET'])
+def avaliacoes_do_restaurante(id):
+    dic = avaliacao_find(None, id)
+    if dic['status_code'] == 200:
+        return {'resp': dic['resp'], 'avaliacoes': dic['avaliacoes']}, dic['status_code']
+    else:
+        return dic['resp'], dic['status_code']
+
+@app.route('avaliacoes/usuarios/<int:id1>/restaurantes/<int:id2>', methods=['GET'])
+def avaliacao_usuario_restaurante(id1, id2):
+    dic = avaliacao_find(id1, id2)
+    if dic['status_code'] == 200:
+        return {'resp': dic['resp'], 'avaliacao': dic['avaliacao']}, dic['status_code']
+    else:
+        return dic['resp'], dic['status_code']
 
 if __name__ == '__main__':
     app.run(debug=True)

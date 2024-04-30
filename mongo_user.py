@@ -1,9 +1,8 @@
-#create user
 import pymongo
 import pprint
 import statistics
-from utils import campos_obrigatorios, conn_mongo
-from mongo_rest import rest_find
+from utils import *
+from mongo_rest import *
 
 client, db = conn_mongo()
 
@@ -102,28 +101,26 @@ def user_seguir_delete(usuario_id, amigo_id):
     return {'resp': f'Erro: Usuario <{usuario_id}> ou usuario <{amigo_id}> não existem', 'status_code': 404}
 
 # adiciona comida fav ao usuario. (futuramente refatorar comida para lista)
-def user_comida_add(usuario_id, comida):
+def user_comida_add(usuario_id, comidas: list):
   user = user_find(usuario_id)
   if user['status_code'] == 200:
     user = user['user']
-    if comida not in user['comida_fav']:
-      db.usuarios.update_one({'_id': usuario_id}, {'$push': {'comida_fav': comida}})
-      return {'resp': f'Comida <{comida}> adicionada ao usuario <{usuario_id}>', 'status_code': 200}
-    else:
-      return {'resp': f'O usuario <{usuario_id}> já favoritou a comida <{comida}>', 'status_code': 400}
+    for comida in comidas:
+      if comida not in user['comida_fav']:
+        db.usuarios.update_one({'_id': usuario_id}, {'$push': {'comida_fav': comida}})
+    return {'resp': f'Comidas <{comidas}> adicionadas ao usuario <{usuario_id}>', 'status_code': 200}
   else:
     return {'resp': f'Erro: O usuario <{usuario_id}> não existe', 'status_code': 404}
 
 # retira comida da lista de favoritos do usuario 
-def user_comida_delete(usuario_id, comida):
+def user_comida_delete(usuario_id, comidas: list):
   user = user_find(usuario_id)
   if user['status_code'] == 200:
     user = user['user']
-    if comida in user['comida_fav']:
-      db.usuarios.update_one({'_id': usuario_id}, {'$pull': {'comida_fav': comida}})
-      return {'resp': f'Comida <{comida}> removida com sucesso do usuario <{usuario_id}>', 'status_code': 200}
-    else:
-      return {'resp': f'Comida <{comida}> não esta na lista de favoritas do usuario <{usuario_id}>', 'status_code': 400}
+    for comida in comidas:
+      if comida in user['comida_fav']:
+        db.usuarios.update_one({'_id': usuario_id}, {'$pull': {'comida_fav': comida}})
+    return {'resp': f'Comidas <{comidas}> removidas com sucesso do usuario <{usuario_id}>', 'status_code': 200}
   else:
     return {'resp': f'Erro: O usuario <{usuario_id}> não existe', 'status_code': 404}
 
@@ -167,7 +164,7 @@ def avaliacao_find(usuario_id=None, rest_id=None):
       avaliacoes = db.avaliacoes.find({'usuario_id': {'$all': [usuario_id]}})
       avaliacoes = list(avaliacoes)
       if avaliacoes == []:
-        return {'resp': f'Erro: O usuario <{usuario_id}> não fez nenhuma avaliacão'}
+        return {'resp': f'Erro: O usuario <{usuario_id}> não fez nenhuma avaliacão', 'status_code': 400}
       else:
         return {'resp': f'Avaliações do usuario <{usuario_id}> listadas com sucesso', 'avaliacoes': avaliacoes, 'status_code': 200}
     else:
@@ -177,7 +174,7 @@ def avaliacao_find(usuario_id=None, rest_id=None):
       avaliacoes = db.avaliacoes.find({'restaurante_id': {'$all': [rest_id]}})
       avaliacoes = list(avaliacoes)
       if avaliacoes == []:
-        return {'resp': f'Erro: O restaurante <{rest_id}> não tem nenhuma avaliacão'}
+        return {'resp': f'Erro: O restaurante <{rest_id}> não tem nenhuma avaliacão', 'status_code': 400}
       else:
         return {'resp': f'Avaliações do restaurante <{rest_id}> listadas com sucesso', 'avaliacoes': avaliacoes, 'status_code': 200}
     else:
@@ -186,12 +183,13 @@ def avaliacao_find(usuario_id=None, rest_id=None):
     if user['status_code'] == 200 and rest['status_code'] == 200:
       avaliacao = db.avaliacoes.find_one({'usuario_id': usuario_id, 'restaurante_id': rest_id})
       if avaliacao == None:
-        return {'resp': f'O usuario <{usuario_id}> não fez nenhuma avaliação do restaurante <{rest_id}>', 'status_code': 400}
+        return {'resp': f'Erro: O usuario <{usuario_id}> não fez nenhuma avaliação do restaurante <{rest_id}>', 'status_code': 400}
       else:
         return {'resp': f'Avaliação do usuario <{usuario_id}> do restaurante <{rest_id}>', 'avaliacao': avaliacao, 'status_code': 200}    
-
+    else:
+      return {'resp': f'Erro: O usuario <{usuario_id}> ou o restaurante <{rest_id}> não existem', 'status_code': 404}
 # adiciona uma avaliacao do usuario x ao restaurante y, recebe (usuario_id; rest_id; nota de 0 a 5; "motivos" é como, 'o que podemos melhorar', uma lista de avaliacoes pre definidas como = [sabor, tempero, quantidade, temperatura, prato errado]; comentario sobre o restaurante)
-def user_nota_add(usuario_id, rest_id, nota, motivos, comentario):
+def user_avaliacao_add(usuario_id, rest_id, nota, motivos, comentario):
   if nota > 5 or nota < 0:
     return {'resp': 'Erro: Nota invalida, notas validas => [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5]', 'status_code': 404}
   user, rest, avaliacao= user_find(usuario_id), rest_find(rest_id), avaliacao_find(usuario_id, rest_id)
@@ -238,17 +236,17 @@ def user_nota_add(usuario_id, rest_id, nota, motivos, comentario):
 
 
 def rest_possiveis_clientes(rest_id):
-    possiveis_clientes = []
-    rest = rest_find(rest_id)
-    if rest == None:
-        return {'resp': f'Erro: O restaurante <{rest_id}> não foi encontrado', 'status_code': 404}
-    preferencias = rest['restaurante']['categorias']
-    usuarios = user_find()
-    for user in usuarios['users']:
-        for categoria in preferencias:
-            if  categoria in user['comida_fav']:
-                if user not in possiveis_clientes:
-                    possiveis_clientes.append(user)
-    if len(possiveis_clientes) == 0:
-        return {'resp': f'Erro: Nenhum possivel cliente encontrado para o restaurante <{rest_id}>', 'status_code': 404}
-    return {'resp': f'Possiveis clientes do restaurante <{rest_id}> encontrados com sucesso', 'possiveis_clientes': possiveis_clientes, 'status_code': 200}
+  possiveis_clientes = []
+  rest = rest_find(rest_id)
+  if rest == None:
+    return {'resp': f'Erro: O restaurante <{rest_id}> não foi encontrado', 'status_code': 404}
+  preferencias = rest['restaurante']['categorias']
+  usuarios = user_find()
+  for user in usuarios['users']:
+    for categoria in preferencias:
+      if  categoria in user['comida_fav']:
+        if user not in possiveis_clientes:
+          possiveis_clientes.append(user)
+  if len(possiveis_clientes) == 0:
+    return {'resp': f'Erro: Nenhum possivel cliente encontrado para o restaurante <{rest_id}>', 'status_code': 404}
+  return {'resp': f'Possiveis clientes do restaurante <{rest_id}> encontrados com sucesso', 'possiveis_clientes': possiveis_clientes, 'status_code': 200}

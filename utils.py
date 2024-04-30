@@ -5,6 +5,7 @@ import urllib.parse
 from collections import Counter
 import pymongo
 from geopy.distance import geodesic
+from datetime import datetime
 
 def info_mongo():
     arq = [f'{dirname(getcwd())}/{f}' for f in listdir(dirname(getcwd())) if f == 'MENU_mongodb.json'][0]
@@ -45,3 +46,12 @@ def calcula_dist(user_loc, rest_loc):
     dist_carro = requests.get(url_carro).json()['routes'][0]['sections'][0]['travelSummary']['length']
 
     return {'carro' : dist_carro, 'pedestre' : dist_pedestre}
+
+def calcula_idade(data):
+  data_atual = datetime.now()
+  try:
+    data = datetime.strptime(data, "%d/%m/%Y")
+    idade = data_atual.year - data.year - ((data_atual.month, data_atual.day) < (data.month, data.day))
+    return idade
+  except ValueError:
+    return 'Erro'
