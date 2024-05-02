@@ -50,5 +50,10 @@ def listar_restaurantes_deletados():
     dic = rest_deletado_find()
     return {'resp': dic["resp"], 'restaurantes_deletados': dic['restaurantes_deletados']}, dic["status_code"]
 
+@app.route('/get_loc/<string:end>', methods=['GET'])
+def get_loc(end):
+    loc = busca_loc(end)
+    return {'resp': [loc['lat'], loc['lng']]}, 200
+
 if __name__ == '__main__':
     app.run(debug=True)
