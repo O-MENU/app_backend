@@ -188,11 +188,11 @@ def avaliacao_find(usuario_id=None, rest_id=None):
         return {'resp': f'Avaliação do usuario <{usuario_id}> do restaurante <{rest_id}>', 'avaliacao': avaliacao, 'status_code': 200}    
     else:
       return {'resp': f'Erro: O usuario <{usuario_id}> ou o restaurante <{rest_id}> não existem', 'status_code': 404}
-# adiciona uma avaliacao do usuario x ao restaurante y, recebe (usuario_id; rest_id; nota de 0 a 5; "motivos" é como, 'o que podemos melhorar', uma lista de avaliacoes pre definidas como = [sabor, tempero, quantidade, temperatura, prato errado]; comentario sobre o restaurante)
+# adiciona uma avaliacao do usuario x ao restaurante y, recebe (usuario_id; rest_id; nota de 0 a 5; "pontos_fortes" é como, 'o que podemos melhorar', uma lista de avaliacoes pre definidas como = [sabor, tempero, quantidade, temperatura, prato errado]; comentario sobre o restaurante)
 def user_avaliacao_add(usuario_id, rest_id, json):
-  if not campos_obrigatorios(json, ['nota', 'motivos', 'comentario']):
+  if not campos_obrigatorios(json, ['nota', 'pontos_fortes', 'comentario']):
     return {'resp': 'Erro: Campos do json estão errados ou faltando', 'status_code': 400}
-  nota, motivos, comentario = json['nota'], json['motivos'], json['comentario']
+  nota, pontos_fortes, comentario = json['nota'], json['pontos_fortes'], json['comentario']
   if nota > 5 or nota < 0:
     return {'resp': 'Erro: Nota invalida, notas validas => [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5]', 'status_code': 404}
   user, rest, avaliacao= user_find(usuario_id), rest_find(rest_id), avaliacao_find(usuario_id, rest_id)
@@ -204,7 +204,7 @@ def user_avaliacao_add(usuario_id, rest_id, json):
         'restaurante_id': rest_id,
         'usuario_id': usuario_id,
         'nota': nota,
-        'motivos': motivos,
+        'pontos_fortes': pontos_fortes,
         'comentario': comentario
       }
       db.avaliacoes.insert_one(dic)
@@ -214,7 +214,7 @@ def user_avaliacao_add(usuario_id, rest_id, json):
         'restaurante_id': rest_id,
         'usuario_id': usuario_id,
         'nota': nota,
-        'motivos': motivos,
+        'pontos_fortes': pontos_fortes,
         'comentario': comentario
       }
       db.avaliacoes.update_one({'_id': avaliacao['avaliacao']['_id']}, {'$set': dic})
