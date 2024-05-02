@@ -5,6 +5,7 @@ client, db = conn_mongo()
 
 counter = db.counters.find_one()
 restaurante_id = counter['restaurantes_id']
+prato_id = counter['pratos_id']
 
 def rest_add(json):
     if campos_obrigatorios(json, ['nome', 'email', 'localizacao', 'cnpj', 'senha', 'categorias']):
@@ -65,21 +66,36 @@ def rest_delete(id):
 
 def adicionar_prato(id, json):
     rest = rest_find(id)
-    existe = False
     if rest['status_code'] == 200:
         for prato in rest['restaurante']['cardapio']:
             if prato['nome_prato'] == json['nome_prato']:
-                existe = True
-            if existe:
                 return {'resp': f'Erro: O prato <{json["nome_prato"]}> já existe', 'status_code': 400}
         if campos_obrigatorios(json, ['nome_prato', 'preco', 'descricao']):
-            json['fotos'] = []
-            db.restaurantes.update_one({'_id': id}, {'$push': {'cardapio': json}})
+            dic = {
+                '_id': prato_id,
+                'nome_prato': json['nome_prato'],
+                'preco': json['preco'],
+                'descricao': json['descricao'],
+                'foto_prato': []
+            }
+            db.counters.update_one({}, {'$inc': {'pratos_id': 1}})
+            db.restaurantes.update_one({'_id': id}, {'$push': {'cardapio': dic}})
             return {'resp': f'Prato adicionado ao restaurante <{id}> com sucesso', 'status_code': 201, 'restaurante': rest['restaurante']}
         else:
             return {'resp': f'Erro: Todos os campos são obrigatorios!', 'status_code': 400}
     else:
         return {'resp': f'Erro: O restaurante <{id}> não existe', 'status_code': 404}
+
+def deleta_prato(rest_id, id_prato):
+    rest = rest_find(rest_id)
+    if rest['status_code'] == 200:
+        for prato in rest['restaurante']['cardapio']:
+            if id_prato == prato['_id']:
+                db.restaurantes.update_one({'_id': rest_id}, {'$pull': {'cardapio': {'_id': prato['_id'], 'nome_prato': prato['nome_prato'], 'preco': prato['preco'], 'descricao': prato['descricao'], 'foto_prato': prato['foto_prato']}}})
+                return {'resp': f'Prato <{prato["nome_prato"]}> deletado com sucesso', 'status_code': 200}
+        return {'resp': f'Erro: O prato com id <{id_prato}> não está no cardapio do restaurante <{rest_id}>', 'status_code': 404}
+    else:
+        return {'resp': f'Erro: O restaurante <{rest_id}> não existe', 'status_code': 404}
 
 def get_cardapio(id):
     rest = rest_find(id)
@@ -88,15 +104,16 @@ def get_cardapio(id):
     else:
         return {'resp': f'Erro: O restaurante <{id}> não existe', 'status_code': 404}
 
-def adiciona_foto(id, json):
-    rest = rest_find(id)
-    if rest['status_code'] == 200:
-        if campos_obrigatorios(json, ['fotos']):
-            for foto in json['fotos']:
-                rest['restaurante']['cardapio'][0]['fotos'].append(foto)
-            db.restaurantes.update_one({'_id': id}, {'$set': {'cardapio': rest['restaurante']['cardapio']}})
-            return {'resp': f'Fotos adicionadas ao restaurante <{id}> com sucesso', 'status_code': 201, 'restaurante': rest['restaurante']}
-        else:
-            return {'resp': f'Erro: Todos os campos são obrigatorios!', 'status_code': 400}
-    return {'resp': f'Erro: O restaurante <{id}> não existe', 'status_code': 404}
+def adiciona_foto_prato(id, id_prato, json):
+    if campos_obrigatorios(json, ['foto_prato']):
+        mongo = db.restaurantes.update_one({'_id': id, 'cardapio._id': id_prato}, {'$set': {'cardapio.$.foto_prato': json['foto_prato']}})
+        if mongo['updatedExisting']:
+            return {'resp': f'Foto adicionadas ao prato com id <{id_prato}> com sucesso', 'status_code': 200}
+        return {'resp': f'Erro: O restaurante <{id}> ou prato <{id_prato}> não existe', 'status_code': 404}
+    return {'resp': f'Erro: O campo "foto_prato" é obrigatoria', 'status_code': 400}
 
+def deleta_foto_prato(id, id_prato):
+    mongo = db.restaurantes.update_one({'_id': id, 'cardapio._id': id_prato}, {'$set': {'cardapio.$.foto_prato': []}})
+    if mongo['updatedExisting']:
+        return {'resp': f'Foto deletada do prato <{id_prato}> com sucesso', 'status_code': 200}
+    return {'resp': f'Erro: O restaurante <{id}> ou o prato <{id_prato}> não existem', 'status_code': 404}
