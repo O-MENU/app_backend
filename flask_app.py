@@ -41,13 +41,15 @@ def deixar_de_seguir(id1, id2):
     dic = user_seguir_delete(id1, id2)
     return dic['resp'], dic['status_code']
 
-@app.route('/usuarios/<int:id>/<list:comidas>', methods=['PUT'])
-def adicionar_comida_fav(id, comidas):
+@app.route('/usuarios/<int:id>/comidas', methods=['PUT'])
+def adicionar_comida_fav(id):
+    comidas = request.list # LISTA !!!
     dic = user_comida_add(id, comidas)
     return dic['resp'], dic['status_code']
 
-@app.route('/usuarios/<int:id>/<list:comidas>', methods=['DELETE'])
-def deleta_comida_fav(id, comidas):
+@app.route('/usuarios/<int:id>/comidas', methods=['DELETE'])
+def deleta_comida_fav(id):
+    comidas = request.list # LISTA !!!
     dic = user_comida_delete(id, comidas)
     return dic['resp'], dic['status_code']
 
@@ -129,9 +131,15 @@ def listar_restaurantes_deletados():
     dic = rest_deletado_find()
     return {'resp': dic["resp"], 'restaurantes_deletados': dic['restaurantes_deletados']}, dic["status_code"]
 
-@app.route('/avaliacoes/usuarios/<int:id1>/restaurantes/<int:id2>/<int:nota>/<list:motivos>/<str:comentario>')
-def fazer_avaliacao_do_restaurante(id1, id2, nota, motivos, comentario):
-    dic = user_avaliacao_add(id1, id2, nota, motivos, comentario)
+
+#--------------------------------------------------------------------------------------------#
+
+# rotas avaliacoes
+
+@app.route('/avaliacoes/usuarios/<int:id1>/restaurantes/<int:id2>')
+def fazer_avaliacao_do_restaurante(id1, id2):
+    json = request.json
+    dic = user_avaliacao_add(id1, id2, json)
     return dic['resp'], dic['status_code']
 
 @app.route('/avaliacoes', methods=['GET'])

@@ -107,13 +107,13 @@ def get_cardapio(id):
 def adiciona_foto_prato(id, id_prato, json):
     if campos_obrigatorios(json, ['foto_prato']):
         mongo = db.restaurantes.update_one({'_id': id, 'cardapio._id': id_prato}, {'$set': {'cardapio.$.foto_prato': json['foto_prato']}})
-        if mongo['updatedExisting']:
+        if mongo.raw_result.get('updatedExisting', None):
             return {'resp': f'Foto adicionadas ao prato com id <{id_prato}> com sucesso', 'status_code': 200}
         return {'resp': f'Erro: O restaurante <{id}> ou prato <{id_prato}> não existe', 'status_code': 404}
     return {'resp': f'Erro: O campo "foto_prato" é obrigatoria', 'status_code': 400}
 
 def deleta_foto_prato(id, id_prato):
     mongo = db.restaurantes.update_one({'_id': id, 'cardapio._id': id_prato}, {'$set': {'cardapio.$.foto_prato': []}})
-    if mongo['updatedExisting']:
+    if mongo.raw_result.get('updatedExisting', None):
         return {'resp': f'Foto deletada do prato <{id_prato}> com sucesso', 'status_code': 200}
     return {'resp': f'Erro: O restaurante <{id}> ou o prato <{id_prato}> não existem', 'status_code': 404}
