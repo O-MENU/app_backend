@@ -115,10 +115,10 @@ def find_cardapio(id):
         return {'resp': dic["resp"], 'cardapio': dic['cardapio']}, dic["status_code"]
     return {'resp': dic["resp"]}, dic["status_code"]
 
-@app.route('/restaurantes/<int:id>/adicionar_foto', methods=['PUT'])	
-def add_foto(id):
+@app.route('/restaurantes/<int:id>/prato/<int:id_prato>/adicionar_foto', methods=['PUT'])	
+def add_foto(id, id_prato):
     json = request.json
-    dic = adiciona_foto(id, json)
+    dic = adiciona_foto_prato(id, id_prato, json)
     if dic["status_code"] == 200:
         return {'resp': dic["resp"], 'restaurante': dic['restaurante']}, dic["status_code"]
     return dic["resp"], dic["status_code"]
