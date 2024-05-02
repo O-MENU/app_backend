@@ -124,7 +124,7 @@ def add_foto(id, id_prato):
     if dic["status_code"] == 200:
         return {'resp': dic["resp"], 'restaurante': dic['restaurante']}, dic["status_code"]
     return dic["resp"], dic["status_code"]
-
+  
 #rotas restaurantes deletados
 @app.route('/restaurantes_deletados', methods=['GET'])
 def listar_restaurantes_deletados():
@@ -170,6 +170,18 @@ def avaliacao_usuario_restaurante(id1, id2):
         return {'resp': dic['resp'], 'avaliacao': dic['avaliacao']}, dic['status_code']
     else:
         return dic['resp'], dic['status_code']
+      
+      
+#rota busca localizacao
+@app.route('/get_loc/<string:end>', methods=['GET'])
+def get_loc(end):
+    loc = busca_loc(end)
+    return {'resp': [loc['lat'], loc['lng']]}, 200
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+
+
+
+
