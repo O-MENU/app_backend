@@ -189,7 +189,10 @@ def avaliacao_find(usuario_id=None, rest_id=None):
     else:
       return {'resp': f'Erro: O usuario <{usuario_id}> ou o restaurante <{rest_id}> não existem', 'status_code': 404}
 # adiciona uma avaliacao do usuario x ao restaurante y, recebe (usuario_id; rest_id; nota de 0 a 5; "motivos" é como, 'o que podemos melhorar', uma lista de avaliacoes pre definidas como = [sabor, tempero, quantidade, temperatura, prato errado]; comentario sobre o restaurante)
-def user_avaliacao_add(usuario_id, rest_id, nota, motivos, comentario):
+def user_avaliacao_add(usuario_id, rest_id, json):
+  if not campos_obrigatorios(json, ['nota', 'motivos', 'comentario']):
+    return {'resp': 'Erro: Campos do json estão errados ou faltando', 'status_code': 400}
+  nota, motivos, comentario = json['nota'], json['motivos'], json['comentario']
   if nota > 5 or nota < 0:
     return {'resp': 'Erro: Nota invalida, notas validas => [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5]', 'status_code': 404}
   user, rest, avaliacao= user_find(usuario_id), rest_find(rest_id), avaliacao_find(usuario_id, rest_id)
