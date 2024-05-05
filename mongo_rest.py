@@ -50,7 +50,10 @@ def rest_update(id, json):
             if key not in campos_possiveis:
                 return {'resp': f'Erro: O campo <{key}> não é suportado', 'status_code': 404}
         for key in json.keys():
-            db.restaurantes.update_one({'_id': id}, {'$set': {key: json[key]}})
+            if key == 'localizacao':
+                db.restaurantes.update_one({'_id': id}, {'$set': {key: {'endereco' : json[key], 'geoloc' : busca_loc(json[key])}}})
+            else:
+                db.restaurantes.update_one({'_id': id}, {'$set': {key: json[key]}})
         return {'resp': f'Restaurante <{id}> editado com sucesso', 'status_code': 200}
     else:
         return {'resp': f'Erro: O restaurante <{id}> não existe', 'status_code': 404}
