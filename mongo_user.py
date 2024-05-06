@@ -12,14 +12,15 @@ avaliacao_id = counter['avaliacoes_id']
 
 # cadastro de usuario
 def user_add(json):
-  if campos_obrigatorios(json, ['nome', 'email', 'data', 'senha', 'foto_perfil']):
+  if campos_obrigatorios(json, ['nome', 'email', 'data_aniversario', 'data_cadastro', 'senha', 'foto_perfil']):
     user = db.usuarios.find_one({'email':json['email']})
     if user == None:
       dic = {
         '_id': usuario_id,
         'nome': json['nome'],
         'email': json['email'],
-        'data': json['data'],
+        'data_aniversario': json['data_aniversario'],
+        'data_cadastro': json['data_cadastro'],
         'senha': json['senha'],
         'foto_perfil': json['foto_perfil'],
         'rest_fav': [],
