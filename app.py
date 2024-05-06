@@ -184,6 +184,9 @@ def get_loc(end):
 if __name__ == '__main__':
     app.run(debug=True)
 
+#    ---------------------- IMPORTANTE --------------------
+# Rota para buscar os tipos de comidas cadastrados no aplicativo
+
 
 
 
