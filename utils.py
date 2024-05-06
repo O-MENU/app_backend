@@ -14,6 +14,7 @@ def info_mongo():
     return data
 
 def campos_obrigatorios(json, campos):
+    json = dict((key, val) for key, val in json.items() if key in campos)
     vazio = True if (None in json.values() or '' in json.values()) else False
     todos_aparecem = Counter(json.keys()) == Counter(campos)
     return not vazio and todos_aparecem
