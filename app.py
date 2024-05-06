@@ -63,8 +63,22 @@ def deleta_rest_fav(id1, id2):
     dic = user_rest_delete(id1, id2)
     return dic['resp'], dic['status_code']
 
-#                              V ---------  IMPORTANTE  ------------ V
-#    -----> Fazer uma rota para atualizar (dar append) com  uma nova localização registrada do usuário <-------
+# ROTAS PARA LOC DO USUARIO
+
+@app.route('/usuario/<int:id>/loc', methods=['GET'])
+def lista_locs_usuario(id):
+    locs = locs_usuario(id)
+    return locs['resp'], locs['status_code']
+
+@app.route('/usuario/<int:id>/loc', methods=['GET'])
+def lista_locs():
+    locs = locs_usuarios()
+    return locs['locs'], locs['status_code']
+
+@app.route('/usuario/<int:id>/loc', methods=['PUT'])
+def add_loc_usuario(id):
+    loc_adicionada = loc_usuario_add(id)
+    return loc_adicionada['resp'], loc_adicionada['status_code']
 
 #--------------------------------------------------------------------------------------------#
 #rotas restaurantes
