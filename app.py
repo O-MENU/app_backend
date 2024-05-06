@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 import os
 from mongo_user import *
 from mongo_rest import *
@@ -43,15 +43,17 @@ def deixar_de_seguir(id1, id2):
 
 @app.route('/usuarios/<int:id>/comidas', methods=['PUT'])
 def adicionar_comida_fav(id):
-    comidas = request.list # LISTA !!!
+    comidas = request.get_json()  
+    if comidas is None:
+        return jsonify({'resp': 'No data provided', 'status_code': 400}), 400
     dic = user_comida_add(id, comidas)
-    return dic['resp'], dic['status_code']
+    return jsonify(dic), dic['status_code']
 
 @app.route('/usuarios/<int:id>/comidas', methods=['DELETE'])
 def deleta_comida_fav(id):
-    comidas = request.list # LISTA !!!
+    comidas = request.get_json()  
     dic = user_comida_delete(id, comidas)
-    return dic['resp'], dic['status_code']
+    return jsonify(dic), dic['status_code']
 
 @app.route('/usuarios/<int:id1>/restaurante/<int:id2>', methods=['PUT'])
 def adiciona_rest_fav(id1, id2):
