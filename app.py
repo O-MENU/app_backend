@@ -139,7 +139,7 @@ def listar_restaurantes_deletados():
 
 # rotas avaliacoes
 
-@app.route('/avaliacoes/usuarios/<int:id1>/restaurantes/<int:id2>')
+@app.route('/avaliacoes/usuarios/<int:id1>/restaurantes/<int:id2>', methods=['POST'])
 def fazer_avaliacao_do_restaurante(id1, id2):
     json = request.json
     dic = user_avaliacao_add(id1, id2, json)
