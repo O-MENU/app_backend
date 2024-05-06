@@ -9,8 +9,8 @@ app = Flask("MENU")
 @app.route('/usuarios', methods=['POST'])
 def cadastrar_usuario():
     json = request.json
-    #chamar funcao de validacao
     dic = user_add(json)
+    # Inicializar objetos não inicializados no json passado ---> (rest_fav, seguidores, seguindo) <--- (localização já está sendo inicializada)
     return dic["resp"], dic["status_code"]
 
 
@@ -62,6 +62,9 @@ def adiciona_rest_fav(id1, id2):
 def deleta_rest_fav(id1, id2):
     dic = user_rest_delete(id1, id2)
     return dic['resp'], dic['status_code']
+
+#                              V ---------  IMPORTANTE  ------------ V
+#    -----> Fazer uma rota para atualizar (dar append) com  uma nova localização registrada do usuário <-------
 
 #--------------------------------------------------------------------------------------------#
 #rotas restaurantes
