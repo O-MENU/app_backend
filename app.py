@@ -70,7 +70,7 @@ def lista_locs_usuario(id):
     locs = locs_usuario(id)
     return locs['resp'], locs['status_code']
 
-@app.route('/usuario/<int:id>/loc', methods=['GET'])
+@app.route('/usuarios/loc', methods=['GET'])
 def lista_locs():
     locs = locs_usuarios()
     return locs['locs'], locs['status_code']
