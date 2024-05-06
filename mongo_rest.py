@@ -8,7 +8,7 @@ restaurante_id = counter['restaurantes_id']
 prato_id = counter['pratos_id']
 
 def rest_add(json):
-    if campos_obrigatorios(json, ['nome', 'email', 'localizacao', 'cnpj', 'senha', 'categorias']):
+    if campos_obrigatorios(json, ['nome', 'email', 'localizacao', 'cnpj', 'senha', 'categorias', 'fotos']):
         rest = db.restaurantes.find_one({'cnpj' : json['cnpj']})
         if rest == None:
             dic = {
@@ -45,7 +45,7 @@ def rest_find(id=None):
 def rest_update(id, json):
     rest = rest_find(id)
     if rest['status_code'] == 200:
-        campos_possiveis = ['nome', 'email', 'localizacao', 'cnpj', 'senha']
+        campos_possiveis = ['nome', 'email', 'localizacao', 'cnpj', 'senha', 'fotos']
         for key in json.keys():
             if key not in campos_possiveis:
                 return {'resp': f'Erro: O campo <{key}> não é suportado', 'status_code': 404}

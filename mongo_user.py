@@ -12,7 +12,7 @@ avaliacao_id = counter['avaliacoes_id']
 
 # cadastro de usuario
 def user_add(json):
-  if campos_obrigatorios(json, ['nome', 'email', 'data', 'senha']):
+  if campos_obrigatorios(json, ['nome', 'email', 'data', 'senha', 'foto_perfil']):
     user = db.usuarios.find_one({'email':json['email']})
     if user == None:
       dic = {
@@ -21,6 +21,7 @@ def user_add(json):
         'email': json['email'],
         'data': json['data'],
         'senha': json['senha'],
+        'foto_perfil': json['foto_perfil'],
         'rest_fav': [],
         'comida_fav': [],
         'seguindo': [],	
@@ -51,7 +52,7 @@ def user_find(usuario_id=None):
 def user_update(usuario_id, json):
   user = user_find(usuario_id)
   if user['status_code'] == 200:
-    if campos_obrigatorios(json, ['nome', 'email', 'data', 'senha']):
+    if campos_obrigatorios(json, ['nome', 'email', 'data', 'senha', 'foto_perfil']):
       for key in json.keys():
         db.usuarios.update_one({'_id': usuario_id}, {'$set': {key: json[key]}})
       return {'resp': f'Usuario <{usuario_id}> editado com sucesso', 'status_code': 200}
@@ -194,7 +195,7 @@ def user_avaliacao_add(usuario_id, rest_id, json):
     return {'resp': 'Erro: Campos do json estão errados ou faltando', 'status_code': 400}
   nota, pontos_fortes, comentario = json['nota'], json['pontos_fortes'], json['comentario']
   if nota > 5 or nota < 0:
-    return {'resp': 'Erro: Nota invalida, notas validas => [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5]', 'status_code': 404}
+    return {'resp': 'Erro: Nota invalida, notas validas => [0, 1, 2, 3, 4, 5]', 'status_code': 404}
   user, rest, avaliacao= user_find(usuario_id), rest_find(rest_id), avaliacao_find(usuario_id, rest_id)
   if user['status_code'] == 200 and rest['status_code'] == 200:
     user, rest = user['user'], rest['restaurante']
