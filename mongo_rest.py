@@ -79,7 +79,7 @@ def adicionar_prato(id, json):
                 'nome_prato': json['nome_prato'],
                 'preco': json['preco'],
                 'descricao': json['descricao'],
-                'foto_prato': []
+                'foto_prato': json['foto_prato']
             }
             db.counters.update_one({}, {'$inc': {'pratos_id': 1}})
             db.restaurantes.update_one({'_id': id}, {'$push': {'cardapio': dic}})
