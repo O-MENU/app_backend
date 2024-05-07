@@ -8,7 +8,7 @@ restaurante_id = counter['restaurantes_id']
 prato_id = counter['pratos_id']
 
 def rest_add(json):
-    if campos_obrigatorios(json, ['nome', 'email', 'localizacao', 'cnpj', 'senha', 'categorias', 'fotos']):
+    if campos_obrigatorios(json, ['nome', 'email', 'localizacao', 'cnpj', 'senha', 'categorias']):
         rest = db.restaurantes.find_one({'cnpj' : json['cnpj']})
         if rest == None:
             dic = {
