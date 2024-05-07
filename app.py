@@ -79,7 +79,8 @@ def lista_locs():
 
 @app.route('/usuario/<int:id>/loc', methods=['PUT'])
 def add_loc_usuario(id):
-    loc_adicionada = loc_usuario_add(id)
+    json = request.json
+    loc_adicionada = loc_usuario_add(id, json)
     return loc_adicionada['resp'], loc_adicionada['status_code']
 
 #--------------------------------------------------------------------------------------------#
