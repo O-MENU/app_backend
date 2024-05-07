@@ -208,6 +208,11 @@ def get_loc(end):
     loc = busca_loc(end)
     return {'resp': [loc['lat'], loc['lng']]}, 200
 
+@app.route('/get_rota/<string:end1>/<string:end2>', methods=['GET'])
+def get_rota(end1, end2):
+    coords = calcula_dist(end1, end2)
+    return {'resp' : coords}, 200
+
 if __name__ == '__main__':
     app.run(debug=True)
 

@@ -6,6 +6,7 @@ from collections import Counter
 import pymongo
 from geopy.distance import geodesic
 from datetime import datetime
+import flexpolyline
 
 def info_mongo():
     arq = [f'{dirname(getcwd())}/{f}' for f in listdir(dirname(getcwd())) if f == 'MENU_mongodb.json'][0]
@@ -40,13 +41,21 @@ def calcula_dist(user_loc, rest_loc):
     if type(rest_loc) == dict:
         rest_loc = (rest_loc['lat'], rest_loc['lng'])
 
-    url_pedestre = f'https://router.hereapi.com/v8/routes?transportMode=pedestrian&origin={user_loc[0]},{user_loc[1]}&destination={rest_loc[0]},{rest_loc[1]}&return=travelSummary&apikey={api_key}'
+    if type(user_loc) == str:
+        user_loc = [float(val) for val in user_loc.split(',')]
+
+    if type(rest_loc) == str:
+        rest_loc = [float(val) for val in rest_loc.split(',')]
+
+    url_pedestre = f'https://router.hereapi.com/v8/routes?transportMode=pedestrian&origin={user_loc[0]},{user_loc[1]}&destination={rest_loc[0]},{rest_loc[1]}&return=travelSummary,polyline&apikey={api_key}'
     dist_pedestre = requests.get(url_pedestre).json()['routes'][0]['sections'][0]['travelSummary']['length']
+    pedestre_line = requests.get(url_pedestre).json()['routes'][0]['sections'][0]['polyline']
 
-    url_carro = f'https://router.hereapi.com/v8/routes?transportMode=car&origin={user_loc[0]},{user_loc[1]}&destination={rest_loc[0]},{rest_loc[1]}&return=travelSummary&apikey={api_key}'
+    url_carro = f'https://router.hereapi.com/v8/routes?transportMode=car&origin={user_loc[0]},{user_loc[1]}&destination={rest_loc[0]},{rest_loc[1]}&return=travelSummary,polyline&apikey={api_key}'
     dist_carro = requests.get(url_carro).json()['routes'][0]['sections'][0]['travelSummary']['length']
+    carro_line = requests.get(url_carro).json()['routes'][0]['sections'][0]['polyline']
 
-    return {'carro' : dist_carro, 'pedestre' : dist_pedestre}
+    return {'carro' : dist_carro, 'carro_line' : flexpolyline.decode(carro_line), 'pedestre' : dist_pedestre, 'pedestre_line' : flexpolyline.decode(pedestre_line)}
 
 def calcula_idade(data):
   data_atual = datetime.now()
