@@ -276,4 +276,3 @@ def rest_possiveis_clientes(rest_id):
     return {'resp': f'Erro: Nenhum possivel cliente encontrado para o restaurante <{rest_id}>', 'status_code': 404}
   return {'resp': f'Possiveis clientes do restaurante <{rest_id}> encontrados com sucesso', 'possiveis_clientes': possiveis_clientes, 'status_code': 200}
 
-print(locs_usuarios())
