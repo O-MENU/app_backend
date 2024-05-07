@@ -27,7 +27,7 @@ def user_add(json):
         'comida_fav': [],
         'seguindo': [],	
         'seguidores': [],
-        'localizacao': [], #{'data_hora': '', 'lat': 0, 'lng': 0}
+        'locs': [], 
       }
       db.counters.update_one({}, {'$inc':{'usuarios_id':1}})
       db.usuarios.insert_one(dic)
@@ -234,7 +234,27 @@ def user_avaliacao_add(usuario_id, rest_id, json):
   else:
     return {'resp': f'Erro: Usuario <{usuario_id}> ou restaurante <{rest_id}> não existe', 'status_code': 404}
 
+def locs_usuario(usuario_id):
+  user = user_find(usuario_id)
+  if user['status_code'] == 200:
+    return {'resp': user['user']['locs'], 'status_code': 200}
+  return {'resp': f'Erro: Usuario <{usuario_id}> não existe', 'status_code': 404}
 
+def locs_usuarios():
+  loc = []
+  all_locs = db.usuarios.find({}, {'locs': 1, '_id': 0})
+  for locs in all_locs:
+    for ltlng in locs['locs']:
+      loc.append(ltlng)
+  return {'resp': 'Localizações dos usuarios listadas', 'locs': loc, 'status_code': 200}
+
+def loc_usuario_add(usuario_id, loc):
+  user = user_find(usuario_id)
+  if user['status_code'] == 200:
+    ltlng = loc['loc']
+    db.usuarios.update_one({'_id': usuario_id}, {'$push': {'locs': ltlng}})
+    return {'resp': f'Localização adicionada com sucesso ao usuario <{usuario_id}>', 'status_code': 200}
+  return {'resp': f'Erro: Usuario <{usuario_id}> não existe', 'status_code': 404}
 
 
 #############FUNCAO REST POR CONTA DE CIRCULAR IMPORT###########################################################
@@ -255,3 +275,5 @@ def rest_possiveis_clientes(rest_id):
   if len(possiveis_clientes) == 0:
     return {'resp': f'Erro: Nenhum possivel cliente encontrado para o restaurante <{rest_id}>', 'status_code': 404}
   return {'resp': f'Possiveis clientes do restaurante <{rest_id}> encontrados com sucesso', 'possiveis_clientes': possiveis_clientes, 'status_code': 200}
+
+print(locs_usuarios())
