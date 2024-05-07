@@ -131,8 +131,8 @@ def user_rest_add(usuario_id, rest_id):
   user, rest = user_find(usuario_id), rest_find(rest_id)
   if user['status_code'] == 200 and rest['status_code'] == 200:
     user, rest = user['user'], rest['restaurante']
-    for rest in user['rest_fav']:
-      if rest_id == rest['_id']:
+    for restaurante in user['rest_fav']:
+      if rest_id == restaurante['_id']:
         return {'resp': f'Erro: O restaurante <{rest_id}> já esta favoritado pelo usuario <{usuario_id}>', 'status_code': 400}
     db.usuarios.update_one({'_id': usuario_id}, {'$push': {'rest_fav': {'_id': rest_id, 'nome': rest['nome']}}})
     return {'resp': f'Restaurante <{rest_id}> adicionado com sucesso aos favoritos do usuario <{usuario_id}>', 'status_code': 200}
