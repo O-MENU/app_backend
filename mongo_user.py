@@ -205,13 +205,13 @@ def user_avaliacao_add(usuario_id, rest_id, json): # nota pontos_fortes comentar
       for key in json.keys():
         dic[key] = json[key]
       db.avaliacoes.insert_one(dic)
-      db.counters.update_one({}, {'$inc': {'avaliacoes_id': 1}})
     else:
       dic = {}
       for key in json.keys():
         dic[key] = json[key]
       db.avaliacoes.update_one({'_id': avaliacao['avaliacao']['_id']}, {'$unset': {'avaliacao.nota': 1, 'avaliacao.pontos_fortes': 1, 'avaliacao.comentario': 1}})
       db.avaliacoes.update_one({'_id': avaliacao['avaliacao']['_id']}, {'$set': dic})
+    db.counters.update_one({}, {'$inc': {'avaliacoes_id': 1}})
     avaliacoes = avaliacao_find(None, rest_id)
     notas = []
     if len(avaliacoes) > 0:
