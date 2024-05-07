@@ -8,7 +8,7 @@ restaurante_id = counter['restaurantes_id']
 prato_id = counter['pratos_id']
 
 def rest_add(json):
-    if campos_obrigatorios(json, ['nome', 'email', 'localizacao', 'cnpj', 'senha', 'categorias', 'fotos']):
+    if campos_obrigatorios(json, ['nome', 'email', 'localizacao', 'cnpj', 'senha', 'categorias']):
         rest = db.restaurantes.find_one({'cnpj' : json['cnpj']})
         if rest == None:
             dic = {
@@ -120,3 +120,17 @@ def deleta_foto_prato(id, id_prato):
     if mongo.raw_result.get('updatedExisting', None):
         return {'resp': f'Foto deletada do prato <{id_prato}> com sucesso', 'status_code': 200}
     return {'resp': f'Erro: O restaurante <{id}> ou o prato <{id_prato}> não existem', 'status_code': 404}
+
+def adiciona_foto_rest(id, json):
+    rest = rest_find(id)
+    if rest['status_code'] == 200 and campos_obrigatorios(json, ['fotos']):
+        db.restaurantes.update_one({'_id': id}, {'$push': {'fotos': json['fotos']}})
+        return {'resp': 'Foto adicionada com sucesso', 'status_code': 200}
+    return {'resp': 'Erro: Restaurante não existe ou json errado', 'status_code': 404}
+
+def deleta_fotos_rest(id):
+    rest = rest_find(id)
+    if rest['status_code'] == 200:
+        db.restaurantes.update_one({'_id': id}, {'$set': {'fotos': []}})
+        return {'resp': 'Fotos deletadas', 'status_code': 200}
+    return {'resp': 'Erro: restaurante nao existe', 'status_code': 404}

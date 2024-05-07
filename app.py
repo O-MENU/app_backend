@@ -137,13 +137,24 @@ def find_cardapio(id):
     return {'resp': dic["resp"]}, dic["status_code"]
 
 @app.route('/restaurantes/<int:id>/prato/<int:id_prato>/adicionar_foto', methods=['PUT'])	
-def add_foto(id, id_prato):
+def add_foto_prato(id, id_prato):
     json = request.json
     dic = adiciona_foto_prato(id, id_prato, json)
     if dic["status_code"] == 200:
         return {'resp': dic["resp"], 'restaurante': dic['restaurante']}, dic["status_code"]
     return dic["resp"], dic["status_code"]
   
+@app.route('/restaurante/foto', methods=['PUT'])
+def add_foto_rest(id):
+    fotos = request.json
+    dic = adiciona_foto_rest(id, fotos)
+    return dic['resp'], dic['status_code']
+
+@app.route('/restaurante/foto', methods=['DELETE'])
+def deleta_fotos_rest(id):
+    dic = adiciona_foto_rest(id)
+    return dic['resp'], dic['status_code']
+
 #rotas restaurantes deletados
 @app.route('/restaurantes_deletados', methods=['GET'])
 def listar_restaurantes_deletados():
