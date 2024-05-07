@@ -191,12 +191,7 @@ def avaliacao_find(usuario_id=None, rest_id=None):
     else:
       return {'resp': f'Erro: O usuario <{usuario_id}> ou o restaurante <{rest_id}> não existem', 'status_code': 404}
 # adiciona uma avaliacao do usuario x ao restaurante y, recebe (usuario_id; rest_id; nota de 0 a 5; "pontos_fortes" é como, 'o que podemos melhorar', uma lista de avaliacoes pre definidas como = [sabor, tempero, quantidade, temperatura, prato errado]; comentario sobre o restaurante)
-def user_avaliacao_add(usuario_id, rest_id, json):
-  if not campos_obrigatorios(json, ['nota', 'pontos_fortes', 'comentario']):
-    return {'resp': 'Erro: Campos do json estão errados ou faltando', 'status_code': 400}
-  nota, pontos_fortes, comentario = json['nota'], json['pontos_fortes'], json['comentario']
-  if nota > 5 or nota < 0:
-    return {'resp': 'Erro: Nota invalida, notas validas => [0, 1, 2, 3, 4, 5]', 'status_code': 404}
+def user_avaliacao_add(usuario_id, rest_id, json): # nota pontos_fortes comentario
   user, rest, avaliacao= user_find(usuario_id), rest_find(rest_id), avaliacao_find(usuario_id, rest_id)
   if user['status_code'] == 200 and rest['status_code'] == 200:
     user, rest = user['user'], rest['restaurante']
@@ -205,32 +200,30 @@ def user_avaliacao_add(usuario_id, rest_id, json):
         '_id': avaliacao_id,
         'restaurante_id': rest_id,
         'usuario_id': usuario_id,
-        'nota': nota,
-        'pontos_fortes': pontos_fortes,
-        'comentario': comentario
       }
+
+      for key in json.keys():
+        dic[key] = json[key]
       db.avaliacoes.insert_one(dic)
+      db.counters.update_one({}, {'$inc': {'avaliacoes_id': 1}})
     else:
-      dic = {
-        '_id': avaliacao_id,
-        'restaurante_id': rest_id,
-        'usuario_id': usuario_id,
-        'nota': nota,
-        'pontos_fortes': pontos_fortes,
-        'comentario': comentario
-      }
+      dic = {}
+      for key in json.keys():
+        dic[key] = json[key]
+      db.avaliacoes.update_one({'_id': avaliacao['avaliacao']['_id']}, {'$unset': {'avaliacao.nota': 1, 'avaliacao.pontos_fortes': 1, 'avaliacao.comentario': 1}})
       db.avaliacoes.update_one({'_id': avaliacao['avaliacao']['_id']}, {'$set': dic})
-    db.counters.update_one({}, {'$inc': {'avaliacoes_id': 1}})
     avaliacoes = avaliacao_find(None, rest_id)
     notas = []
     if len(avaliacoes) > 0:
       for ava in avaliacoes['avaliacoes']:
         notas.append(ava['nota'])
       nota_rest = statistics.mean(notas)
+      db.restaurantes.update_one({'_id': rest_id}, {'$set': {'nota': float(f'{nota_rest:.1f}')}})
     else:
-      nota_rest = nota
-    db.restaurantes.update_one({'_id': rest_id}, {'$set': {'nota': float(f'{nota_rest:.1f}')}})
-    return {'resp': f'Usuario <{usuario_id}> deu nota <{nota}> ao restaurante <{rest_id}>', 'status_code': 200}
+      if 'nota' in json.keys():
+        nota_rest = json['nota']
+        db.restaurantes.update_one({'_id': rest_id}, {'$set': {'nota': float(f'{nota_rest:.1f}')}})
+    return {'resp': f'Usuario <{usuario_id}> avaliou o restaurante <{rest_id}>', 'status_code': 200}
   else:
     return {'resp': f'Erro: Usuario <{usuario_id}> ou restaurante <{rest_id}> não existe', 'status_code': 404}
 
